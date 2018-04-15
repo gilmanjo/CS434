@@ -147,10 +147,19 @@ pix_train = pix_train/255
 pix_test = pix_test/255
 
 w_log = np.zeros(256)
-grad_des = np.zeros(256)
-
-while (abs(grad_des) > m.exp(-3)):
+eps = m.exp(-3)
+nu = 0.005
+k = 0
+while True:
 	grad_des = np.zeros(256)
 	for i in range(0, 256):
-		pred_ans = 1/(1 + m.exp(-np.dot(np.transpose(w_log), pix_train[i])))
-		grad_des
+		pred_ans = 1 / (1 + m.exp(-np.dot(np.transpose(w_log), pix_train[i])))
+		grad_des = grad_des + (pred_ans - ans_train[i]) * pix_train[i]
+	w_log = w_log - nu*grad_des
+	if not (np.sum(np.square(grad_des)) > eps ** 2):
+		break
+	k = k + 1
+
+print(w_log)
+print(k)
+
