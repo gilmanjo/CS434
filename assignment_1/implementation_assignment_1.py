@@ -1,5 +1,6 @@
 import numpy as np
 import csv
+import math as m
 
 
 #Linear regression part
@@ -107,8 +108,8 @@ for d in range(0, N):
 	sse_test_mod_d.append(tmp_err)
 
 for d in range(0, N):
-	mse_train_mod_d.append((d+1, sse_train_mod_d[d] / X_train_mod_d.shape[0]))
-	mse_test_mod_d.append((d+1, sse_test_mod_d[d] / X_test_mod_d.shape[0]))
+	mse_train_mod_d.append((d+1, (sse_train_mod_d[d] / X_train_mod_d.shape[0])[0]))
+	mse_test_mod_d.append((d+1, (sse_test_mod_d[d] / X_test_mod_d.shape[0])[0]))
 
 #write MSE data with additional features to csv file
 header_train = ["mse train"]
@@ -122,3 +123,34 @@ with open("mse_add_feat.csv", 'w+', newline='') as csv_mse:
 
 
 #Logistic regression part
+
+tmp = []
+with open("./usps-4-9-train.csv", "r") as csv_train:
+	csv_reader = csv.reader(csv_train)
+	for row in csv_reader:
+		tmp.append(row)
+	logistic_train = np.array(tmp).astype(float)
+
+tmp = []
+with open("./usps-4-9-test.csv", "r") as csv_test:
+	csv_reader = csv.reader(csv_test)
+	for row in csv_reader:
+		tmp.append(row)
+	logistic_test = np.array(tmp).astype(float)
+
+pix_train = np.delete(logistic_train, 256, 1)
+ans_train = np.delete(logistic_train, np.s_[0:256], 1)
+pix_test = np.delete(logistic_test, 256, 1)
+ans_test = np.delete(logistic_test, np.s_[0:256], 1)
+
+pix_train = pix_train/255
+pix_test = pix_test/255
+
+w_log = np.zeros(256)
+grad_des = np.zeros(256)
+
+while (abs(grad_des) > m.exp(-3)):
+	grad_des = np.zeros(256)
+	for i in range(0, 256):
+		pred_ans = 1/(1 + m.exp(-np.dot(np.transpose(w_log), pix_train[i])))
+		grad_des
