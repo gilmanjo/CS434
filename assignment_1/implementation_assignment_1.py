@@ -2,6 +2,7 @@ import numpy as np
 import csv
 import math as m
 import matplotlib.pyplot as plt
+import sys
 
 
 def main():
@@ -123,8 +124,7 @@ def main():
 		mse_writer.writerow(header_test)
 		mse_writer.writerows(mse_test_mod_d)
 
-
-	#Logistic regression part
+	# Logistic regression part
 
 	tmp = []
 	with open("./usps-4-9-train.csv", "r") as csv_train:
@@ -141,39 +141,51 @@ def main():
 		logistic_test = np.array(tmp).astype(float)
 
 	pix_train = np.delete(logistic_train, 256, 1)
+	pix_train = pix_train/255
+	pix_train = np.insert(pix_train, 0, 1, axis=1)
+
 	ans_train = np.delete(logistic_train, np.s_[0:256], 1)
+
 	pix_test = np.delete(logistic_test, 256, 1)
+	pix_test = pix_test/255
+	pix_test = np.insert(pix_test, 0, 1, axis=1)
+
 	ans_test = np.delete(logistic_test, np.s_[0:256], 1)
 
-	pix_train = pix_train/255
-	pix_test = pix_test/255
-
-	w_log = np.zeros(256)
+	w_log = np.zeros(pix_train.shape[1])
 	eps = m.exp(-3)
-	nu = 0.005
+	nu = 0.0001
 	k = 0	# num of gradient descent iterations
+	lam = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+	num_batches = 100
 
 	# negative log-likelihood over time of training, col 0 is gradient descent iteration
 	# col 1 is training, col 2 is testing
 	ll_ot = [[], [], []]	
 
-	print("\nPerforming gradient descent...")
+	print("\nPerforming gradient descent...\n")
 	while True:
-		grad_des = np.zeros(256)
-		for i in range(256):
-			pred_ans = 1 / (1 + m.exp(-np.dot(np.transpose(w_log), pix_train[i])))
-			grad_des += (pred_ans - ans_train[i]) * pix_train[i]
+		grad_des = np.zeros(pix_train.shape[1])
+		for i in range(pix_train.shape[0]):
+			pred_ans = 1.0 / (1.0 + m.exp(-np.dot(np.transpose(w_log), pix_train[i])))
+			grad_des += ((pred_ans - ans_train[i]) * pix_train[i])
 		
-		w_log -= nu*grad_des
+		w_log -= (nu*grad_des)
 		k += 1
+
+		# print descent iteration
+		if k % 10 == 0:
+			print("Batch:\t{}".format(k))
 
 		# record L_w over time on both training and testing data
 		ll_ot[0].append(k)
-		ll_ot[1].append(objective_func(w_log, pix_train, ans_train)/len(pix_train))
-		ll_ot[2].append(objective_func(w_log, pix_test, ans_test)/len(pix_test))
+		ll_ot[1].append(get_acc(w_log, pix_train, ans_train))
+		ll_ot[2].append(get_acc(w_log, pix_test, ans_test))
 		
 		# check if delta is less than epsilon
-		if (np.linalg.norm(grad_des) <= eps):
+		#if (np.sqrt(grad_des.dot(grad_des)) <= eps):
+		#	break
+		if k == num_batches:
 			break
 
 	"""L_w = 0
@@ -192,18 +204,40 @@ def main():
 	plt.show()
 
 def sigmoid(w_transpose, X_i):
-	print(1 / (1 + np.exp(-np.dot(w_transpose, X_i))))
-	return (1 / (1 + np.exp(-np.dot(w_transpose, X_i))))
+	#print(1.0 / (1.0 + np.exp(-np.dot(w_transpose, X_i))))
+	return (1.0 / (1.0 + np.exp(-np.dot(w_transpose, X_i))))
 
 def log_likelihood(w_t, X_i, y_i):
-	return y_i*np.log(sigmoid(w_t, X_i)) + (1 - y_i)*np.log(1 - sigmoid(w_t, X_i))
+	return (y_i*np.log(sigmoid(w_t, X_i)) + (1 - y_i)*np.log(1.0 - sigmoid(w_t, X_i)))
 
 def objective_func(w, X, y):
 	# calculate objective function
 	L_w = 0
 	for i in range(len(X)):
-		L_w += -log_likelihood(np.transpose(w), X[i], y[i])
+		L_w -= log_likelihood(np.transpose(w), X[i], y[i])
 	return L_w
+
+def get_acc(w, X, y):
+
+	acc_predicts = 0
+
+	# iterate through all samples
+	for i in range(len(X)):
+
+		# check real label
+		if y[i] == 1:
+
+			# check sigmoid
+			if sigmoid(np.transpose(w), X[i]) >= 0.5:
+				acc_predicts += 1
+
+		# check 1 - sigmoid
+		elif y[i] == 0:
+
+			if (1 - sigmoid(np.transpose(w), X[i])) >= 0.5:
+				acc_predicts += 1
+
+	return acc_predicts / len(X)
 
 if __name__ == '__main__':
 	main()
