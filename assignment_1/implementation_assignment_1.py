@@ -154,10 +154,10 @@ def main():
 
 	w_log = np.zeros(pix_train.shape[1])
 	eps = m.exp(-3)
-	nu = 0.0001
+	nu = 0.00001
 	k = 0	# num of gradient descent iterations
-	lam = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
-	num_batches = 100
+	lam = [0.001, 0.01, 0.05, 1, 10, 100, 1000]
+	num_batches = 200
 
 	# negative log-likelihood over time of training, col 0 is gradient descent iteration
 	# col 1 is training, col 2 is testing
@@ -168,7 +168,7 @@ def main():
 		grad_des = np.zeros(pix_train.shape[1])
 		for i in range(pix_train.shape[0]):
 			pred_ans = 1.0 / (1.0 + m.exp(-np.dot(np.transpose(w_log), pix_train[i])))
-			grad_des += ((pred_ans - ans_train[i]) * pix_train[i])
+			grad_des += ((pred_ans - ans_train[i]) * pix_train[i]) + (0.5*lam[2]*(np.linalg.norm(w_log)**2))
 		
 		w_log -= (nu*grad_des)
 		k += 1
@@ -188,13 +188,6 @@ def main():
 		if k == num_batches:
 			break
 
-	"""L_w = 0
-	for i in range(len(pix_train)):
-		L_w += -log_likelihood(np.transpose(w_log), pix_train[i], ans_train[i])
-
-	print(L_w/len(pix_train))"""
-	print(k)
-
 	# graph training and testing accuracy over time for problem 2.1
 	fig, ax = plt.subplots()
 
@@ -204,7 +197,6 @@ def main():
 	plt.show()
 
 def sigmoid(w_transpose, X_i):
-	#print(1.0 / (1.0 + np.exp(-np.dot(w_transpose, X_i))))
 	return (1.0 / (1.0 + np.exp(-np.dot(w_transpose, X_i))))
 
 def log_likelihood(w_t, X_i, y_i):
