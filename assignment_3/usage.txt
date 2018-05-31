@@ -1,0 +1,18 @@
+usage: implementation_assignment_3.py [-h] [--nn-type {2sig,3sig,2relu,3relu}]
+                                      [--lr LR] [--wd WD]
+                                      [--momentum MOMENTUM]
+                                      [--dropout DROPOUT]
+
+Run a simple neural net on CIFAR-10.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --nn-type {2sig,3sig,2relu,3relu}
+                        the type of neural net to train on
+  --lr LR               the learning rate of training
+  --wd WD               the weight decay of the optimizer
+  --momentum MOMENTUM   the momentum of the optimizer
+  --dropout DROPOUT     the dropout rate to use in the neural net
+
+
+param_survey.py is a helper script used to train with different parameters repeatedly
